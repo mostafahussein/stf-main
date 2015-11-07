@@ -1,0 +1,30 @@
+{% set formula_name = 'exim_formula' %}
+{% set default_files = [] %}
+{% set backup_file = '' %}
+{% set other_files = ['/etc/mail/'] %}
+{%set exim = salt['grains.filter_by']({
+    'RedHat': {
+        'server': 'exim',
+        'service': 'exim',
+        'configfile': '/etc/exim/exim.conf',
+        'templates': '/etc/exim/exim.conf.localopts',
+        'template_source': 'salt://exim_dev_formula/install/resources/exim.conf.localopts'
+    },
+    'Debian': {
+        'server': 'exim4',
+        'service': 'exim4',
+        'configfile': '/etc/exim4/update-exim4.conf',
+        'templates': '/etc/exim4/exim4.conf.template',
+        'template_source': 'salt://exim_dev_formula/install/resources/exim4.conf.template.tmpl'
+    }
+})%}
+{% set services_list = [exim.server, 'postfix', 'sendmail'] %}
+{% for service in services_list %}
+{% set existing = salt.service.available(service) %}
+{% if existing == True %}
+{% do other_files.append("/etc/" +  service  + "/")%}
+{% endif %}
+{% endfor %}}
+{# next versions enhancements #}
+{# exim.conf has issue of user line 1171  .. changed to exim untill tested with cpanel #}
+{# switch cmd.run with cmd.script as a test #}
